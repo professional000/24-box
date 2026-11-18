@@ -5,7 +5,7 @@ const SECRET_PASSWORD = "BAVANI";
 const BIRTHDAY = new Date(2026,11,4,0,0,0);
 
 // Testing only: true = bypass countdown
-const TEST_MODE = false;
+const TEST_MODE = true;
 
 /* NAVIGATION */
 
