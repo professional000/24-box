@@ -76,30 +76,45 @@
   </div>
 </section>
 
+
 <!-- 06 SCRATCH PHOTO -->
 <section class="screen" id="s6">
   <div class="glass">
-    <h2 class="gradient-text">A Memory Just For You ⭐</h2>
-    <p>Something beautiful is hiding underneath...</p>
 
-    <label>Choose your special photo</label>
-    <input type="file" id="photoInput" accept="image/*">
+    <h2 class="gradient-text">
+      A Memory Just For You ⭐
+    </h2>
+
+    <p>
+      Something beautiful is hiding underneath...
+    </p>
 
     <div class="scratch-wrap" id="scratchWrap">
-      <img id="hiddenPhoto" alt="Special memory">
+      <img
+        id="hiddenPhoto"
+        src="bavani-photo.jpg"
+        alt="A special birthday surprise"
+      >
       <canvas id="scratchCanvas"></canvas>
     </div>
 
     <p class="scratch-note">
-      ✨ Scratch to reveal your memory. 80% is enough!
+      ✨ Scratch to reveal your special memory.
+      80% is enough!
     </p>
+
     <p id="scratchProgress">0% revealed</p>
 
-    <button id="scratchContinue" onclick="next(7)" disabled>
+    <button
+      id="scratchContinue"
+      onclick="next(7)"
+      disabled>
       REVEAL MY FINAL SURPRISE ❤️
     </button>
+
   </div>
 </section>
+  
 
 <!-- 07 FINAL MESSAGE -->
 <section class="screen" id="s7">
