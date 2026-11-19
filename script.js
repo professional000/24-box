@@ -1,471 +1,864 @@
+/* =========================================
+   BAVANI BIRTHDAY SURPRISE ❤️
+   Complete JavaScript - script.js
+========================================= */
+
 
 /* SETTINGS */
 
 const SECRET_PASSWORD = "BAVANI";
-const BIRTHDAY = new Date(2026,11,4,0,0,0);
+const BIRTHDAY = new Date(2026, 11, 4, 0, 0, 0);
 
 // Testing only: true = bypass countdown
+// Real birthday release: change to false
 const TEST_MODE = true;
+
+const FORMSPREE_URL = "https://formspree.io/f/xzepljrz";
+
 
 /* NAVIGATION */
 
 function next(number) {
-  document.querySelectorAll(".screen").forEach(s =>
-    s.classList.remove("active")
-  );
 
-  document.getElementById("s"+number).classList.add("active");
+    document.querySelectorAll(".screen").forEach(screen => {
+        screen.classList.remove("active");
+    });
 
-  window.scrollTo(0,0);
+    const target = document.getElementById("s" + number);
 
-  if(number===4) createBalloons();
-  if(number===6) setupScratch();
+    if (target) {
+        target.classList.add("active");
+    }
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+
+    if (number === 4) {
+        createBalloons();
+    }
+
+    if (number === 6) {
+        requestAnimationFrame(() => setupScratch());
+    }
+
+    if (number === 8) {
+        const message = document.getElementById("finalMessage");
+        if (message) message.classList.add("show");
+    }
 }
 
-function showModal(title,message,emoji="💗") {
-  document.getElementById("modalTitle").textContent=title;
-  document.getElementById("modalMessage").textContent=message;
-  document.getElementById("modalEmoji").textContent=emoji;
-  document.getElementById("modal").classList.add("show");
+
+/* BACKGROUND MUSIC */
+
+const music = new Audio("romantic.mp3");
+
+music.loop = true;
+music.volume = 0.35;
+
+let musicStarted = false;
+
+function startMusic() {
+
+    if (musicStarted) return;
+
+    music.play()
+        .then(() => {
+            musicStarted = true;
+        })
+        .catch(error => {
+            console.log("Music will start after another interaction.");
+        });
 }
 
-function closeModal() {
-  document.getElementById("modal").classList.remove("show");
-}
+document.addEventListener("click", startMusic);
+
 
 /* COUNTDOWN */
 
 function updateCountdown() {
-  const diff=BIRTHDAY.getTime()-Date.now();
 
-  if(diff<=0) {
-    ["days","hours","minutes","seconds"].forEach(id=>
-      document.getElementById(id).textContent="00"
+    const now = new Date();
+    const difference = BIRTHDAY.getTime() - now.getTime();
+
+    if (TEST_MODE) {
+
+        const countdown = document.getElementById("countdown");
+
+        if (countdown) {
+            countdown.innerHTML = "🎉 Your surprise is ready!";
+        }
+
+        const continueButton = document.getElementById("countdownContinue");
+
+        if (continueButton) {
+            continueButton.disabled = false;
+        }
+
+        return;
+    }
+
+    if (difference <= 0) {
+
+        const countdown = document.getElementById("countdown");
+
+        if (countdown) {
+            countdown.innerHTML = "🎂 Happy Birthday Bavani!";
+        }
+
+        const continueButton = document.getElementById("countdownContinue");
+
+        if (continueButton) {
+            continueButton.disabled = false;
+        }
+
+        return;
+    }
+
+    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+
+    const hours = Math.floor(
+        (difference / (1000 * 60 * 60)) % 24
     );
 
-    document.getElementById("countText").textContent=
-      "The magical day is finally here! Happy Birthday Bavani! ❤️";
+    const minutes = Math.floor(
+        (difference / (1000 * 60)) % 60
+    );
 
-    document.getElementById("countContinue").disabled=false;
-    return;
-  }
+    const seconds = Math.floor(
+        (difference / 1000) % 60
+    );
 
-  const days=Math.floor(diff/86400000);
-  const hours=Math.floor(diff%86400000/3600000);
-  const minutes=Math.floor(diff%3600000/60000);
-  const seconds=Math.floor(diff%60000/1000);
+    const countdown = document.getElementById("countdown");
 
-  document.getElementById("days").textContent=days;
-  document.getElementById("hours").textContent=String(hours).padStart(2,"0");
-  document.getElementById("minutes").textContent=String(minutes).padStart(2,"0");
-  document.getElementById("seconds").textContent=String(seconds).padStart(2,"0");
+    if (countdown) {
+
+        countdown.innerHTML = `
+            <div>${days} <small>Days</small></div>
+            <div>${hours} <small>Hours</small></div>
+            <div>${minutes} <small>Minutes</small></div>
+            <div>${seconds} <small>Seconds</small></div>
+        `;
+    }
 }
 
 updateCountdown();
-setInterval(updateCountdown,1000);
+setInterval(updateCountdown, 1000);
 
-if(TEST_MODE) {
-  document.getElementById("countContinue").disabled=false;
-}
 
-/* PASSWORD */
+/* PASSWORD CHECK */
 
 function checkPassword() {
-  const value=document.getElementById("password").value;
 
-  if(value.toUpperCase()===SECRET_PASSWORD.toUpperCase()) {
-    document.getElementById("passError").textContent="";
-    next(4);
-    sparkleBurst(innerWidth/2,innerHeight/2,35);
-  } else {
-    document.getElementById("passError").textContent=
-      "Oops! Wrong password. Try again ❤️";
-    document.getElementById("password").value="";
-  }
+    const passwordInput = document.getElementById("password");
+    const error = document.getElementById("passwordError");
+
+    if (!passwordInput) return;
+
+    const enteredPassword = passwordInput.value.trim();
+
+    if (enteredPassword.toUpperCase() === SECRET_PASSWORD) {
+
+        if (error) {
+            error.textContent = "";
+        }
+
+        next(4);
+
+    } else {
+
+        if (error) {
+            error.textContent = "Oops! Wrong password. Try again ❤️";
+        }
+
+        passwordInput.value = "";
+    }
 }
 
-document.getElementById("password").addEventListener("keydown",e=>{
-  if(e.key==="Enter") checkPassword();
-});
 
-/* 24 BALLOONS */
+/* 24 SPECIAL MESSAGES */
 
-const messages=[
-"உன் புன்னகை எப்போதும் இப்படியே அழகாக இருக்கட்டும்! ❤️",
-"You deserve all the happiness in this world.",
-"உன் கனவுகள் அனைத்தும் நனவாகட்டும்! ✨",
-"உன்னைப் போன்றவர்கள் மிகவும் special.",
-"May every sunrise bring you new hope.",
-"உன் வாழ்க்கையில் மகிழ்ச்சியே நிறைந்திருக்கட்டும்.",
-"Keep shining, beautiful soul! 🌸",
-"உன் சின்னச் சின்ன சந்தோஷங்கள் பெரிய நினைவுகளாகட்டும்.",
-"You are one of a kind.",
-"எப்போதும் உன் முகத்தில் புன்னகை இருக்கட்டும்!",
-"May your heart always find peace.",
-"உன் ஆசைகள் அனைத்தும் நிறைவேறட்டும்.",
-"You make ordinary moments special.",
-"உன் வாழ்க்கை வண்ணமயமான பூந்தோட்டமாகட்டும்!",
-"Never stop dreaming, Bavani.",
-"உன்னைச் சுற்றி அன்பான மனிதர்கள் நிறைந்திருக்கட்டும்.",
-"Your happiness matters.",
-"ஒவ்வொரு நாளும் ஒரு புதிய தொடக்கமாகட்டும்.",
-"May you always have a reason to smile.",
-"உன் மனதில் இருக்கும் நல்ல எண்ணங்கள் நிறைவேறட்டும்.",
-"Stay magical, stay beautiful! ✨",
-"நீ நினைக்கும் உயரத்தை அடைய வேண்டும்.",
-"A thousand smiles for your special day.",
-"இனிய பிறந்தநாள் வாழ்த்துகள், Bavani! ❤️"
+const messages = [
+
+    "You are one of the most beautiful reasons to smile. ❤️",
+
+    "Your smile makes ordinary moments magical. ✨",
+
+    "May your life always be filled with happiness. 🌸",
+
+    "You deserve all the beautiful things in this world. 💖",
+
+    "Keep smiling. Your smile is precious. 😊",
+
+    "May every dream of yours come true. 🌟",
+
+    "You are special in your own beautiful way. 🦋",
+
+    "Wishing you endless love and happiness. ❤️",
+
+    "May your days shine brighter than the stars. ⭐",
+
+    "Never stop believing in yourself. 💫",
+
+    "Your happiness matters more than words can explain. 🥰",
+
+    "May life surprise you with beautiful moments. 🎁",
+
+    "Keep shining like the brightest star. 🌟",
+
+    "You deserve a lifetime of beautiful memories. 💕",
+
+    "May every sunrise bring you new hope. 🌅",
+
+    "Your presence makes moments more special. 🌷",
+
+    "May your heart always stay peaceful. 🕊️",
+
+    "You are a beautiful chapter in someone's story. ❤️",
+
+    "May laughter follow you everywhere. 😍",
+
+    "Never lose that beautiful smile. 😊",
+
+    "May your wishes turn into reality. 🎀",
+
+    "A beautiful soul deserves a beautiful life. 🌹",
+
+    "Today and always, keep being yourself. 💗",
+
+    "Happy Birthday, Bavani! You are truly special. 🎂"
+
 ];
 
-const balloonColors=[
-"#ff5caa","#9c70ff","#42dfff","#ffca57",
-"#70ffbb","#ff795f","#d77bff","#4da5ff",
-"#ff4d86","#c3ff5b","#ff9e53","#70e5ff",
-"#a58aff","#ffdc6e","#fd70d5","#60ffc8",
-"#ff7899","#77aaff","#e7a1ff","#ffe56e",
-"#65e9ff","#ff9a64","#9effae","#ff63d1"
+
+/* BALLOON COLORS */
+
+const balloonColors = [
+
+    "#ff4d6d",
+    "#ff85a1",
+    "#c77dff",
+    "#7b2cbf",
+    "#4895ef",
+    "#4cc9f0",
+    "#06d6a0",
+    "#ffd166",
+    "#fb8500",
+    "#f72585",
+    "#b5179e",
+    "#90be6d"
+
 ];
 
-let openedBalloons=new Set();
-let balloonCreated=false;
+
+/* SHUFFLE */
 
 function shuffle(array) {
-  return array.sort(()=>Math.random()-.5);
+
+    const result = [...array];
+
+    for (let i = result.length - 1; i > 0; i--) {
+
+        const j = Math.floor(Math.random() * (i + 1));
+
+        [result[i], result[j]] = [result[j], result[i]];
+    }
+
+    return result;
 }
+
+
+/* CREATE EXACTLY 24 BALLOONS */
+
+let balloonsCreated = false;
 
 function createBalloons() {
-  if(balloonCreated)return;
-  balloonCreated=true;
 
-  const grid=document.getElementById("balloonGrid");
+    const container = document.getElementById("balloonContainer");
 
-  shuffle([...Array(24).keys()]).forEach((index,i)=>{
-    const balloon=document.createElement("div");
+    if (!container) return;
 
-    balloon.className="balloon";
-    balloon.textContent="🎈";
-    balloon.style.color=balloonColors[index];
-    balloon.style.filter=`drop-shadow(0 0 12px ${balloonColors[index]})`;
-    balloon.style.setProperty("--delay",i*.08+"s");
-    balloon.dataset.number=index+1;
+    if (balloonsCreated) return;
 
-    balloon.addEventListener("click",()=>{
-      if(openedBalloons.has(index))return;
+    balloonsCreated = true;
 
-      openedBalloons.add(index);
-      balloon.classList.add("opened");
+    container.innerHTML = "";
 
-      showModal("Surprise "+(index+1),messages[index],"🎈");
+    const order = shuffle(
+        Array.from({ length: 24 }, (_, index) => index)
+    );
 
-      sparkleBurst(
-        balloon.getBoundingClientRect().left+25,
-        balloon.getBoundingClientRect().top+25,18
-      );
+    order.forEach((messageIndex, index) => {
 
-      document.getElementById("balloonCount").textContent=
-        openedBalloons.size+" / 24 opened";
+        const balloon = document.createElement("button");
 
-      if(openedBalloons.size===24) {
-        document.getElementById("balloonContinue").disabled=false;
-      }
+        balloon.className = "balloon";
+
+        balloon.type = "button";
+
+        balloon.style.background =
+            balloonColors[index % balloonColors.length];
+
+        balloon.style.animationDelay =
+            (Math.random() * 2) + "s";
+
+        balloon.innerHTML = `
+            <span>${index + 1}</span>
+        `;
+
+        balloon.addEventListener("click", () => {
+
+            showBalloonMessage(messageIndex);
+
+            balloon.classList.add("opened");
+
+            balloon.disabled = true;
+
+        });
+
+        container.appendChild(balloon);
+
     });
 
-    grid.appendChild(balloon);
-  });
 }
+
+
+/* SHOW BALLOON MESSAGE */
+
+function showBalloonMessage(index) {
+
+    const popup = document.getElementById("messagePopup");
+
+    const messageText = document.getElementById("messageText");
+
+    if (!popup || !messageText) return;
+
+    messageText.textContent = messages[index];
+
+    popup.classList.add("show");
+
+    createSparkles();
+
+}
+
+
+/* CLOSE MESSAGE POPUP */
+
+function closeMessage() {
+
+    const popup = document.getElementById("messagePopup");
+
+    if (popup) {
+        popup.classList.remove("show");
+    }
+
+}
+
 
 /* GIFT BOX */
 
-let boxOpened=false;
+function openGift() {
 
-function openBox() {
-  if(boxOpened)return;
-  boxOpened=true;
+    const gift = document.getElementById("giftBox");
 
-  document.querySelector(".big-box").textContent="💝";
-  document.getElementById("boxText").textContent=
-    "A special memory is waiting behind the stars...";
+    if (gift) {
 
-  sparkleBurst(innerWidth/2,innerHeight/2,55);
+        gift.classList.add("opened");
 
-  setTimeout(()=>next(6),1200);
+        createSparkles();
+
+    }
+
+    setTimeout(() => {
+        next(6);
+    }, 1200);
+
 }
 
 
-/* =================================
-   SCRATCH PHOTO - FIXED VERSION
-   Bavani's Secret Birthday Gift ❤️
-================================= */
+/* SCRATCH PHOTO REVEAL */
 
 const hiddenPhoto = document.getElementById("hiddenPhoto");
+
 const canvas = document.getElementById("scratchCanvas");
-const ctx = canvas.getContext("2d");
+
+const ctx = canvas ? canvas.getContext("2d") : null;
 
 let scratching = false;
 let scratched = false;
 let scratchReady = false;
 
-// Load your pre-uploaded birthday photo
-hiddenPhoto.onload = () => {
-  resetScratch();
-};
 
-hiddenPhoto.onerror = () => {
-  console.error("Birthday photo not found!");
-  document.getElementById("scratchProgress").textContent =
-    "Photo loading failed. Please check bavani-photo.jpg";
-};
+if (hiddenPhoto) {
 
-// Initialize when Stage 6 opens
-function setupScratch() {
-  if (hiddenPhoto.complete && hiddenPhoto.naturalWidth > 0) {
-    resetScratch();
-  }
+    hiddenPhoto.onload = () => {
+
+        if (document.getElementById("s6")?.classList.contains("active")) {
+            resetScratch();
+        }
+
+    };
+
+    hiddenPhoto.onerror = () => {
+
+        console.error("Birthday photo not found!");
+
+        const progress = document.getElementById("scratchProgress");
+
+        if (progress) {
+            progress.textContent =
+                "Photo loading failed. Please check bavani-photo.jpg";
+        }
+
+    };
+
 }
 
-// Create scratch cover
+
+/* SETUP SCRATCH */
+
+function setupScratch() {
+
+    if (!canvas || !ctx || !hiddenPhoto) return;
+
+    if (hiddenPhoto.complete && hiddenPhoto.naturalWidth > 0) {
+
+        resetScratch();
+
+    }
+
+}
+
+
+/* RESET SCRATCH */
+
 function resetScratch() {
 
-  const wrap = document.getElementById("scratchWrap");
+    if (!canvas || !ctx || !hiddenPhoto) return;
 
-  if (!wrap || !hiddenPhoto.naturalWidth) return;
+    const wrap = document.getElementById("scratchWrap");
 
-  canvas.width = wrap.clientWidth * devicePixelRatio;
-  canvas.height = wrap.clientHeight * devicePixelRatio;
+    if (!wrap || !hiddenPhoto.naturalWidth) return;
 
-  ctx.globalCompositeOperation = "source-over";
+    const width = wrap.clientWidth;
+    const height = wrap.clientHeight;
 
-  const gradient = ctx.createLinearGradient(
-    0, 0, canvas.width, canvas.height
-  );
+    if (!width || !height) return;
 
-  gradient.addColorStop(0, "#ff8dcb");
-  gradient.addColorStop(0.5, "#9467dc");
-  gradient.addColorStop(1, "#56c8f5");
+    const dpr = window.devicePixelRatio || 1;
 
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
 
-  // Scratch text
-  ctx.fillStyle = "white";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.font = `bold ${Math.max(15, canvas.width / 32)}px Poppins`;
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
 
-  ctx.fillText(
-    "✨ SCRATCH TO REVEAL ✨",
-    canvas.width / 2,
-    canvas.height / 2
-  );
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  ctx.globalCompositeOperation = "destination-out";
+    ctx.globalCompositeOperation = "source-over";
 
-  scratched = false;
-  scratching = false;
-  scratchReady = true;
+    const gradient = ctx.createLinearGradient(
+        0, 0, width, height
+    );
 
-  document.getElementById("scratchProgress").textContent =
-    "0% revealed";
+    gradient.addColorStop(0, "#ff4d6d");
+    gradient.addColorStop(0.5, "#c77dff");
+    gradient.addColorStop(1, "#4895ef");
 
-  document.getElementById("scratchContinue").disabled = true;
+    ctx.fillStyle = gradient;
+
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = "#ffffff";
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    ctx.font = "bold 22px Arial";
+
+    ctx.fillText(
+        "✨ SCRATCH TO REVEAL ✨",
+        width / 2,
+        height / 2
+    );
+
+    ctx.font = "15px Arial";
+
+    ctx.fillText(
+        "A little surprise is waiting for you ❤️",
+        width / 2,
+        height / 2 + 35
+    );
+
+    ctx.globalCompositeOperation = "destination-out";
+
+    scratched = false;
+    scratching = false;
+    scratchReady = true;
+
+    const progress = document.getElementById("scratchProgress");
+
+    if (progress) {
+        progress.textContent = "0% revealed";
+    }
+
+    const button = document.getElementById("scratchContinue");
+
+    if (button) {
+        button.disabled = true;
+    }
+
 }
 
-// Get touch / mouse position
-function getPosition(e) {
 
-  const rect = canvas.getBoundingClientRect();
+/* POINTER POSITION */
 
-  return {
-    x: (e.clientX - rect.left) * canvas.width / rect.width,
-    y: (e.clientY - rect.top) * canvas.height / rect.height
-  };
+function getPosition(event) {
+
+    const rect = canvas.getBoundingClientRect();
+
+    return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+    };
+
 }
 
-// Scratch effect
-function scratch(e) {
 
-  if (!scratching || scratched || !scratchReady) return;
+/* SCRATCH FUNCTION */
 
-  const pos = getPosition(e);
+function scratch(event) {
 
-  ctx.beginPath();
+    if (!scratching || scratched || !scratchReady) return;
 
-  ctx.arc(
-    pos.x,
-    pos.y,
-    canvas.width / 28,
-    0,
-    Math.PI * 2
-  );
+    if (!ctx || !canvas) return;
 
-  ctx.fill();
+    const position = getPosition(event);
 
-  // Magical star effects
-  const rect = canvas.getBoundingClientRect();
+    ctx.globalCompositeOperation = "destination-out";
 
-  sparkleBurst(
-    rect.left + pos.x / canvas.width * rect.width,
-    rect.top + pos.y / canvas.height * rect.height,
-    2
-  );
+    ctx.beginPath();
 
-  checkScratchProgress();
+    ctx.arc(
+        position.x,
+        position.y,
+        24,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    sparkleBurst(position.x, position.y);
+
+    checkScratchProgress();
+
 }
 
-// Calculate scratch percentage
+
+/* CHECK SCRATCH PROGRESS */
+
 function checkScratchProgress() {
 
-  const data = ctx.getImageData(
-    0, 0, canvas.width, canvas.height
-  ).data;
+    if (!ctx || !canvas || scratched) return;
 
-  let transparent = 0;
-  let total = 0;
-
-  // Sample pixels for better performance
-  for (let i = 3; i < data.length; i += 160) {
-    total++;
-
-    if (data[i] < 80) {
-      transparent++;
-    }
-  }
-
-  const percent = Math.floor(
-    (transparent / total) * 100
-  );
-
-  document.getElementById("scratchProgress").textContent =
-    percent + "% revealed";
-
-  // Reveal after 80%
-  if (percent >= 80 && !scratched) {
-
-    scratched = true;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    document.getElementById("scratchProgress").textContent =
-      "✨ Your memory is revealed! ✨";
-
-    document.getElementById("scratchContinue").disabled = false;
-
-    sparkleBurst(
-      innerWidth / 2,
-      innerHeight / 2,
-      65
+    const imageData = ctx.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height
     );
-  }
+
+    const data = imageData.data;
+
+    let transparent = 0;
+    let total = 0;
+
+    for (let i = 3; i < data.length; i += 160) {
+
+        total++;
+
+        if (data[i] < 80) {
+            transparent++;
+        }
+
+    }
+
+    const percent = Math.floor(
+        (transparent / total) * 100
+    );
+
+    const progress = document.getElementById("scratchProgress");
+
+    if (progress) {
+        progress.textContent = percent + "% revealed";
+    }
+
+    if (percent >= 80) {
+
+        scratched = true;
+
+        ctx.clearRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+        const button = document.getElementById("scratchContinue");
+
+        if (button) {
+            button.disabled = false;
+        }
+
+        if (progress) {
+            progress.textContent =
+                "🎉 Surprise revealed! ❤️";
+        }
+
+        createSparkles();
+
+    }
+
 }
 
-// Mobile touch + desktop mouse support
-canvas.addEventListener("pointerdown", e => {
 
-  if (!scratchReady || scratched) return;
+/* SCRATCH EVENTS */
 
-  scratching = true;
+if (canvas) {
 
-  canvas.setPointerCapture(e.pointerId);
+    canvas.addEventListener("pointerdown", event => {
 
-  scratch(e);
-});
+        if (scratched || !scratchReady) return;
 
-canvas.addEventListener("pointermove", scratch);
+        scratching = true;
 
-canvas.addEventListener("pointerup", () => {
-  scratching = false;
-});
+        canvas.setPointerCapture(event.pointerId);
 
-canvas.addEventListener("pointercancel", () => {
-  scratching = false;
-});
+        scratch(event);
 
+    });
 
-canvas.addEventListener("pointermove",scratch);
-canvas.addEventListener("pointerup",()=>scratching=false);
-canvas.addEventListener("pointercancel",()=>scratching=false);
+    canvas.addEventListener("pointermove", scratch);
 
-/* STAR EFFECTS */
+    canvas.addEventListener("pointerup", () => {
+        scratching = false;
+    });
 
-function sparkleBurst(x,y,count=25) {
-  const symbols=["✨","⭐","💖","🌟","💗"];
+    canvas.addEventListener("pointercancel", () => {
+        scratching = false;
+    });
 
-  for(let i=0;i<count;i++) {
-    const particle=document.createElement("div");
-
-    particle.className="particle";
-    particle.textContent=
-      symbols[Math.floor(Math.random()*symbols.length)];
-
-    particle.style.left=x+"px";
-    particle.style.top=y+"px";
-
-    particle.style.setProperty("--x",(Math.random()-.5)*240+"px");
-    particle.style.setProperty("--y",(Math.random()-.5)*240+"px");
-
-    document.body.appendChild(particle);
-    setTimeout(()=>particle.remove(),1100);
-  }
 }
 
-/* FORMSPREE */
+
+/* SCRATCH COMPLETE */
+
+function finishScratch() {
+
+    if (scratched) {
+        next(7);
+    }
+
+}
+
+
+/* SPARKLE EFFECT */
+
+function sparkleBurst(x, y) {
+
+    const wrap = document.getElementById("scratchWrap");
+
+    if (!wrap) return;
+
+    for (let i = 0; i < 3; i++) {
+
+        const sparkle = document.createElement("span");
+
+        sparkle.className = "scratchSparkle";
+
+        sparkle.textContent = "✨";
+
+        sparkle.style.left = x + "px";
+        sparkle.style.top = y + "px";
+
+        sparkle.style.animationDelay =
+            (Math.random() * 0.2) + "s";
+
+        wrap.appendChild(sparkle);
+
+        setTimeout(() => sparkle.remove(), 800);
+
+    }
+
+}
+
+
+/* GENERAL SPARKLES */
+
+function createSparkles() {
+
+    for (let i = 0; i < 20; i++) {
+
+        const sparkle = document.createElement("div");
+
+        sparkle.className = "sparkle";
+
+        sparkle.textContent =
+            ["✨", "⭐", "💖", "🌟"][Math.floor(Math.random() * 4)];
+
+        sparkle.style.position = "fixed";
+
+        sparkle.style.left =
+            Math.random() * 100 + "vw";
+
+        sparkle.style.top =
+            Math.random() * 100 + "vh";
+
+        sparkle.style.pointerEvents = "none";
+
+        sparkle.style.zIndex = "9999";
+
+        document.body.appendChild(sparkle);
+
+        setTimeout(() => sparkle.remove(), 1800);
+
+    }
+
+}
+
+
+/* FINAL MESSAGE */
+
+function showFinalMessage() {
+
+    next(8);
+
+    createSparkles();
+
+}
+
+
+/* SEND SWEET MESSAGE */
 
 async function saveResponse() {
-  const message=document.getElementById("herMessage").value.trim();
-  const status=document.getElementById("responseStatus");
-  const button=document.getElementById("sendButton");
 
-  if(!message) {
-    status.textContent="Please write a little something ❤️";
-    return;
-  }
+    const nameInput = document.getElementById("herName");
 
-  button.disabled=true;
-  button.textContent="SENDING... 💌";
+    const messageInput = document.getElementById("herMessage");
 
-  try {
-    const response=await fetch(
-      "https://formspree.io/f/xzepljrz",
-      {
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          "Accept":"application/json"
-        },
-        body:JSON.stringify({
-          name:"Bavani",
-          message:message,
-          subject:"A Special Message From Bavani ❤️",
-          website:"Magical Birthday Surprise"
-        })
-      }
-    );
+    const status = document.getElementById("responseStatus");
 
-    if(!response.ok)throw new Error("Sending failed");
+    if (!messageInput || !messageInput.value.trim()) {
 
-    status.textContent=
-      "Your words have reached someone special! ❤️";
+        if (status) {
+            status.textContent = "Write a little message first ❤️";
+        }
 
-    document.getElementById("herMessage").disabled=true;
-    button.textContent="SENT WITH LOVE ❤️";
+        return;
 
-    sparkleBurst(innerWidth/2,innerHeight/2,50);
+    }
 
-  } catch(error) {
-    status.textContent="Oops! Please try again.";
-    button.disabled=false;
-    button.textContent="SEND WITH LOVE 💕";
-  }
+    const data = {
+
+        name: nameInput?.value.trim() || "Bavani",
+
+        message: messageInput.value.trim(),
+
+        subject: "A special message from Bavani ❤️"
+
+    };
+
+    if (status) {
+        status.textContent = "Sending your message... 💌";
+    }
+
+    try {
+
+        const response = await fetch(FORMSPREE_URL, {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+
+            body: JSON.stringify(data)
+
+        });
+
+        if (response.ok) {
+
+            if (status) {
+                status.textContent =
+                    "Your message has been sent successfully! ❤️";
+            }
+
+            messageInput.value = "";
+
+            if (nameInput) {
+                nameInput.value = "";
+            }
+
+            createSparkles();
+
+        } else {
+
+            throw new Error("Message sending failed.");
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        if (status) {
+            status.textContent =
+                "Something went wrong. Please try again. 💗";
+        }
+
+    }
+
 }
 
-/* BACKGROUND MUSIC */
 
-const music=new Audio("romantic.mp3");
-music.loop=true;
-music.volume=.35;
+/* ENTER KEY FOR PASSWORD */
 
-document.addEventListener("click",()=>{
-  music.play().catch(()=>{});
-},{once:true});
+document.addEventListener("DOMContentLoaded", () => {
 
-     
+    const passwordInput = document.getElementById("password");
+
+    if (passwordInput) {
+
+        passwordInput.addEventListener("keydown", event => {
+
+            if (event.key === "Enter") {
+                checkPassword();
+            }
+
+        });
+
+    }
+
+});
+
+
+/* WINDOW RESIZE */
+
+window.addEventListener("resize", () => {
+
+    if (
+        document.getElementById("s6")?.classList.contains("active") &&
+        !scratched
+    ) {
+
+        resetScratch();
+
+    }
+
+});
+
+
+console.log("❤️ Bavani Birthday Surprise Website Loaded Successfully!");
