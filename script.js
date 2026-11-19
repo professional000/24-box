@@ -1,7 +1,8 @@
-/* =========================================
-   BAVANI BIRTHDAY SURPRISE ❤️
-   Complete JavaScript - script.js
-========================================= */
+
+/* ==========================================
+   BAVANI BIRTHDAY SURPRISE WEBSITE ❤️
+   COMPLETE JAVASCRIPT
+========================================== */
 
 
 /* SETTINGS */
@@ -9,8 +10,10 @@
 const SECRET_PASSWORD = "BAVANI";
 const BIRTHDAY = new Date(2026, 11, 4, 0, 0, 0);
 
-// Testing only: true = bypass countdown
-// Real birthday release: change to false
+// TEST MODE
+// true  = Countdown bypass
+// false = Real birthday countdown
+
 const TEST_MODE = true;
 
 const FORMSPREE_URL = "https://formspree.io/f/xzepljrz";
@@ -40,12 +43,11 @@ function next(number) {
     }
 
     if (number === 6) {
-        requestAnimationFrame(() => setupScratch());
+        requestAnimationFrame(setupScratch);
     }
 
     if (number === 8) {
-        const message = document.getElementById("finalMessage");
-        if (message) message.classList.add("show");
+        createSparkles();
     }
 }
 
@@ -68,7 +70,7 @@ function startMusic() {
             musicStarted = true;
         })
         .catch(error => {
-            console.log("Music will start after another interaction.");
+            console.log("Music waiting for user interaction.");
         });
 }
 
@@ -82,15 +84,14 @@ function updateCountdown() {
     const now = new Date();
     const difference = BIRTHDAY.getTime() - now.getTime();
 
-    if (TEST_MODE) {
+    const countdown = document.getElementById("countdown");
+    const continueButton = document.getElementById("countdownContinue");
 
-        const countdown = document.getElementById("countdown");
+    if (TEST_MODE) {
 
         if (countdown) {
             countdown.innerHTML = "🎉 Your surprise is ready!";
         }
-
-        const continueButton = document.getElementById("countdownContinue");
 
         if (continueButton) {
             continueButton.disabled = false;
@@ -101,13 +102,9 @@ function updateCountdown() {
 
     if (difference <= 0) {
 
-        const countdown = document.getElementById("countdown");
-
         if (countdown) {
             countdown.innerHTML = "🎂 Happy Birthday Bavani!";
         }
-
-        const continueButton = document.getElementById("countdownContinue");
 
         if (continueButton) {
             continueButton.disabled = false;
@@ -116,7 +113,13 @@ function updateCountdown() {
         return;
     }
 
-    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+    if (continueButton) {
+        continueButton.disabled = true;
+    }
+
+    const days = Math.floor(
+        difference / (1000 * 60 * 60 * 24)
+    );
 
     const hours = Math.floor(
         (difference / (1000 * 60 * 60)) % 24
@@ -130,15 +133,13 @@ function updateCountdown() {
         (difference / 1000) % 60
     );
 
-    const countdown = document.getElementById("countdown");
-
     if (countdown) {
 
         countdown.innerHTML = `
-            <div>${days} <small>Days</small></div>
-            <div>${hours} <small>Hours</small></div>
-            <div>${minutes} <small>Minutes</small></div>
-            <div>${seconds} <small>Seconds</small></div>
+            <div>${days}<small>Days</small></div>
+            <div>${hours}<small>Hours</small></div>
+            <div>${minutes}<small>Minutes</small></div>
+            <div>${seconds}<small>Seconds</small></div>
         `;
     }
 }
@@ -147,7 +148,7 @@ updateCountdown();
 setInterval(updateCountdown, 1000);
 
 
-/* PASSWORD CHECK */
+/* PASSWORD */
 
 function checkPassword() {
 
@@ -169,15 +170,17 @@ function checkPassword() {
     } else {
 
         if (error) {
-            error.textContent = "Oops! Wrong password. Try again ❤️";
+            error.textContent = "Wrong password! Try again ❤️";
         }
 
         passwordInput.value = "";
+        passwordInput.focus();
+
     }
 }
 
 
-/* 24 SPECIAL MESSAGES */
+/* 24 SPECIAL BIRTHDAY MESSAGES */
 
 const messages = [
 
@@ -252,7 +255,7 @@ const balloonColors = [
 ];
 
 
-/* SHUFFLE */
+/* SHUFFLE ARRAY */
 
 function shuffle(array) {
 
@@ -263,13 +266,14 @@ function shuffle(array) {
         const j = Math.floor(Math.random() * (i + 1));
 
         [result[i], result[j]] = [result[j], result[i]];
+
     }
 
     return result;
 }
 
 
-/* CREATE EXACTLY 24 BALLOONS */
+/* CREATE 24 BALLOONS */
 
 let balloonsCreated = false;
 
@@ -294,14 +298,13 @@ function createBalloons() {
         const balloon = document.createElement("button");
 
         balloon.className = "balloon";
-
         balloon.type = "button";
 
         balloon.style.background =
             balloonColors[index % balloonColors.length];
 
         balloon.style.animationDelay =
-            (Math.random() * 2) + "s";
+            Math.random() * 2 + "s";
 
         balloon.innerHTML = `
             <span>${index + 1}</span>
@@ -343,7 +346,7 @@ function showBalloonMessage(index) {
 }
 
 
-/* CLOSE MESSAGE POPUP */
+/* CLOSE MESSAGE */
 
 function closeMessage() {
 
@@ -377,7 +380,7 @@ function openGift() {
 }
 
 
-/* SCRATCH PHOTO REVEAL */
+/* SCRATCH PHOTO ELEMENTS */
 
 const hiddenPhoto = document.getElementById("hiddenPhoto");
 
@@ -389,6 +392,8 @@ let scratching = false;
 let scratched = false;
 let scratchReady = false;
 
+
+/* PHOTO LOADING */
 
 if (hiddenPhoto) {
 
@@ -407,8 +412,10 @@ if (hiddenPhoto) {
         const progress = document.getElementById("scratchProgress");
 
         if (progress) {
+
             progress.textContent =
-                "Photo loading failed. Please check bavani-photo.jpg";
+                "Photo loading failed. Check bavani-photo.jpg";
+
         }
 
     };
@@ -431,7 +438,7 @@ function setupScratch() {
 }
 
 
-/* RESET SCRATCH */
+/* RESET SCRATCH CANVAS */
 
 function resetScratch() {
 
@@ -519,14 +526,17 @@ function getPosition(event) {
     const rect = canvas.getBoundingClientRect();
 
     return {
+
         x: event.clientX - rect.left,
+
         y: event.clientY - rect.top
+
     };
 
 }
 
 
-/* SCRATCH FUNCTION */
+/* SCRATCH */
 
 function scratch(event) {
 
@@ -557,7 +567,7 @@ function scratch(event) {
 }
 
 
-/* CHECK SCRATCH PROGRESS */
+/* CHECK SCRATCH PERCENTAGE */
 
 function checkScratchProgress() {
 
@@ -613,8 +623,10 @@ function checkScratchProgress() {
         }
 
         if (progress) {
+
             progress.textContent =
                 "🎉 Surprise revealed! ❤️";
+
         }
 
         createSparkles();
@@ -643,28 +655,34 @@ if (canvas) {
     canvas.addEventListener("pointermove", scratch);
 
     canvas.addEventListener("pointerup", () => {
+
         scratching = false;
+
     });
 
     canvas.addEventListener("pointercancel", () => {
+
         scratching = false;
+
     });
 
 }
 
 
-/* SCRATCH COMPLETE */
+/* CONTINUE AFTER SCRATCH */
 
 function finishScratch() {
 
     if (scratched) {
+
         next(7);
+
     }
 
 }
 
 
-/* SPARKLE EFFECT */
+/* SCRATCH SPARKLE EFFECT */
 
 function sparkleBurst(x, y) {
 
@@ -683,19 +701,18 @@ function sparkleBurst(x, y) {
         sparkle.style.left = x + "px";
         sparkle.style.top = y + "px";
 
-        sparkle.style.animationDelay =
-            (Math.random() * 0.2) + "s";
-
         wrap.appendChild(sparkle);
 
-        setTimeout(() => sparkle.remove(), 800);
+        setTimeout(() => {
+            sparkle.remove();
+        }, 800);
 
     }
 
 }
 
 
-/* GENERAL SPARKLES */
+/* GENERAL SPARKLE EFFECT */
 
 function createSparkles() {
 
@@ -706,7 +723,9 @@ function createSparkles() {
         sparkle.className = "sparkle";
 
         sparkle.textContent =
-            ["✨", "⭐", "💖", "🌟"][Math.floor(Math.random() * 4)];
+            ["✨", "⭐", "💖", "🌟"][
+                Math.floor(Math.random() * 4)
+            ];
 
         sparkle.style.position = "fixed";
 
@@ -722,7 +741,9 @@ function createSparkles() {
 
         document.body.appendChild(sparkle);
 
-        setTimeout(() => sparkle.remove(), 1800);
+        setTimeout(() => {
+            sparkle.remove();
+        }, 1800);
 
     }
 
@@ -740,7 +761,7 @@ function showFinalMessage() {
 }
 
 
-/* SEND SWEET MESSAGE */
+/* SEND MESSAGE TO FORMSPREE */
 
 async function saveResponse() {
 
@@ -753,7 +774,8 @@ async function saveResponse() {
     if (!messageInput || !messageInput.value.trim()) {
 
         if (status) {
-            status.textContent = "Write a little message first ❤️";
+            status.textContent =
+                "Write a little message first ❤️";
         }
 
         return;
@@ -781,8 +803,11 @@ async function saveResponse() {
             method: "POST",
 
             headers: {
+
                 "Content-Type": "application/json",
+
                 "Accept": "application/json"
+
             },
 
             body: JSON.stringify(data)
@@ -792,8 +817,10 @@ async function saveResponse() {
         if (response.ok) {
 
             if (status) {
+
                 status.textContent =
                     "Your message has been sent successfully! ❤️";
+
             }
 
             messageInput.value = "";
@@ -815,8 +842,10 @@ async function saveResponse() {
         console.error(error);
 
         if (status) {
+
             status.textContent =
                 "Something went wrong. Please try again. 💗";
+
         }
 
     }
@@ -824,7 +853,7 @@ async function saveResponse() {
 }
 
 
-/* ENTER KEY FOR PASSWORD */
+/* PASSWORD ENTER KEY */
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -835,7 +864,9 @@ document.addEventListener("DOMContentLoaded", () => {
         passwordInput.addEventListener("keydown", event => {
 
             if (event.key === "Enter") {
+
                 checkPassword();
+
             }
 
         });
@@ -861,4 +892,9 @@ window.addEventListener("resize", () => {
 });
 
 
-console.log("❤️ Bavani Birthday Surprise Website Loaded Successfully!");
+/* WEBSITE LOADED */
+
+console.log(
+    "❤️ Bavani Birthday Surprise Website Loaded Successfully!"
+);
+       
