@@ -193,21 +193,19 @@ function openBox() {
 
 /* SCRATCH PHOTO */
 
-const photoInput=document.getElementById("photoInput");
-const hiddenPhoto=document.getElementById("hiddenPhoto");
-const canvas=document.getElementById("scratchCanvas");
-const ctx=canvas.getContext("2d");
+hiddenPhoto.onload = () => {
+  resetScratch();
+};
 
-let scratching=false;
-let scratched=false;
+hiddenPhoto.onerror = () => {
+  console.error("Birthday photo not found!");
+};
 
-photoInput.addEventListener("change",()=>{
-  const file=photoInput.files[0];
-  if(!file)return;
-
-  hiddenPhoto.onload=resetScratch;
-  hiddenPhoto.src=URL.createObjectURL(file);
-});
+function setupScratch() {
+  if (hiddenPhoto.complete && hiddenPhoto.naturalWidth > 0) {
+    if (!canvas.width) resetScratch();
+  }
+}
 
 function setupScratch() {
   if(!canvas.width)resetScratch();
