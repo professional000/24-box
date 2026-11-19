@@ -191,122 +191,195 @@ function openBox() {
   setTimeout(()=>next(6),1200);
 }
 
-/* SCRATCH PHOTO */
 
+/* =================================
+   SCRATCH PHOTO - FIXED VERSION
+   Bavani's Secret Birthday Gift ❤️
+================================= */
+
+const hiddenPhoto = document.getElementById("hiddenPhoto");
+const canvas = document.getElementById("scratchCanvas");
+const ctx = canvas.getContext("2d");
+
+let scratching = false;
+let scratched = false;
+let scratchReady = false;
+
+// Load your pre-uploaded birthday photo
 hiddenPhoto.onload = () => {
   resetScratch();
 };
 
 hiddenPhoto.onerror = () => {
   console.error("Birthday photo not found!");
+  document.getElementById("scratchProgress").textContent =
+    "Photo loading failed. Please check bavani-photo.jpg";
 };
 
+// Initialize when Stage 6 opens
 function setupScratch() {
   if (hiddenPhoto.complete && hiddenPhoto.naturalWidth > 0) {
-    if (!canvas.width) resetScratch();
+    resetScratch();
   }
 }
 
-function setupScratch() {
-  if(!canvas.width)resetScratch();
-}
-
+// Create scratch cover
 function resetScratch() {
-  const wrap=document.getElementById("scratchWrap");
 
-  canvas.width=wrap.clientWidth*devicePixelRatio;
-  canvas.height=wrap.clientHeight*devicePixelRatio;
+  const wrap = document.getElementById("scratchWrap");
 
-  ctx.globalCompositeOperation="source-over";
+  if (!wrap || !hiddenPhoto.naturalWidth) return;
 
-  const gradient=ctx.createLinearGradient(
-    0,0,canvas.width,canvas.height
+  canvas.width = wrap.clientWidth * devicePixelRatio;
+  canvas.height = wrap.clientHeight * devicePixelRatio;
+
+  ctx.globalCompositeOperation = "source-over";
+
+  const gradient = ctx.createLinearGradient(
+    0, 0, canvas.width, canvas.height
   );
 
-  gradient.addColorStop(0,"#ff8dcb");
-  gradient.addColorStop(.5,"#9467dc");
-  gradient.addColorStop(1,"#56c8f5");
+  gradient.addColorStop(0, "#ff8dcb");
+  gradient.addColorStop(0.5, "#9467dc");
+  gradient.addColorStop(1, "#56c8f5");
 
-  ctx.fillStyle=gradient;
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  ctx.fillStyle="white";
-  ctx.textAlign="center";
-  ctx.textBaseline="middle";
-  ctx.font=`bold ${Math.max(15,canvas.width/32)}px Poppins`;
-  ctx.fillText("✨ SCRATCH TO REVEAL ✨",
-    canvas.width/2,canvas.height/2);
+  // Scratch text
+  ctx.fillStyle = "white";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = `bold ${Math.max(15, canvas.width / 32)}px Poppins`;
 
-  ctx.globalCompositeOperation="destination-out";
+  ctx.fillText(
+    "✨ SCRATCH TO REVEAL ✨",
+    canvas.width / 2,
+    canvas.height / 2
+  );
 
-  scratched=false;
-  document.getElementById("scratchProgress").textContent="0% revealed";
-  document.getElementById("scratchContinue").disabled=true;
+  ctx.globalCompositeOperation = "destination-out";
+
+  scratched = false;
+  scratching = false;
+  scratchReady = true;
+
+  document.getElementById("scratchProgress").textContent =
+    "0% revealed";
+
+  document.getElementById("scratchContinue").disabled = true;
 }
 
+// Get touch / mouse position
 function getPosition(e) {
-  const rect=canvas.getBoundingClientRect();
+
+  const rect = canvas.getBoundingClientRect();
 
   return {
-    x:(e.clientX-rect.left)*canvas.width/rect.width,
-    y:(e.clientY-rect.top)*canvas.height/rect.height
+    x: (e.clientX - rect.left) * canvas.width / rect.width,
+    y: (e.clientY - rect.top) * canvas.height / rect.height
   };
 }
 
+// Scratch effect
 function scratch(e) {
-  if(!scratching||scratched)return;
 
-  const pos=getPosition(e);
+  if (!scratching || scratched || !scratchReady) return;
+
+  const pos = getPosition(e);
 
   ctx.beginPath();
-  ctx.arc(pos.x,pos.y,canvas.width/28,0,Math.PI*2);
+
+  ctx.arc(
+    pos.x,
+    pos.y,
+    canvas.width / 28,
+    0,
+    Math.PI * 2
+  );
+
   ctx.fill();
 
-  const rect=canvas.getBoundingClientRect();
+  // Magical star effects
+  const rect = canvas.getBoundingClientRect();
 
   sparkleBurst(
-    rect.left+pos.x/canvas.width*rect.width,
-    rect.top+pos.y/canvas.height*rect.height,
-    3
+    rect.left + pos.x / canvas.width * rect.width,
+    rect.top + pos.y / canvas.height * rect.height,
+    2
   );
 
   checkScratchProgress();
 }
 
+// Calculate scratch percentage
 function checkScratchProgress() {
-  const data=ctx.getImageData(
-    0,0,canvas.width,canvas.height
+
+  const data = ctx.getImageData(
+    0, 0, canvas.width, canvas.height
   ).data;
 
-  let transparent=0,total=0;
+  let transparent = 0;
+  let total = 0;
 
-  for(let i=3;i<data.length;i+=160) {
+  // Sample pixels for better performance
+  for (let i = 3; i < data.length; i += 160) {
     total++;
-    if(data[i]<80)transparent++;
+
+    if (data[i] < 80) {
+      transparent++;
+    }
   }
 
-  const percent=Math.floor(transparent/total*100);
+  const percent = Math.floor(
+    (transparent / total) * 100
+  );
 
-  document.getElementById("scratchProgress").textContent=
-    percent+"% revealed";
+  document.getElementById("scratchProgress").textContent =
+    percent + "% revealed";
 
-  if(percent>=80&&!scratched) {
-    scratched=true;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+  // Reveal after 80%
+  if (percent >= 80 && !scratched) {
 
-    document.getElementById("scratchProgress").textContent=
+    scratched = true;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    document.getElementById("scratchProgress").textContent =
       "✨ Your memory is revealed! ✨";
 
-    document.getElementById("scratchContinue").disabled=false;
-    sparkleBurst(innerWidth/2,innerHeight/2,65);
+    document.getElementById("scratchContinue").disabled = false;
+
+    sparkleBurst(
+      innerWidth / 2,
+      innerHeight / 2,
+      65
+    );
   }
 }
 
-canvas.addEventListener("pointerdown",e=>{
-  scratching=true;
+// Mobile touch + desktop mouse support
+canvas.addEventListener("pointerdown", e => {
+
+  if (!scratchReady || scratched) return;
+
+  scratching = true;
+
   canvas.setPointerCapture(e.pointerId);
+
   scratch(e);
 });
+
+canvas.addEventListener("pointermove", scratch);
+
+canvas.addEventListener("pointerup", () => {
+  scratching = false;
+});
+
+canvas.addEventListener("pointercancel", () => {
+  scratching = false;
+});
+
 
 canvas.addEventListener("pointermove",scratch);
 canvas.addEventListener("pointerup",()=>scratching=false);
